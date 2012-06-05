@@ -36,7 +36,7 @@ $.getJSON('http://checkvist.com/checklists/' + listID + '/tasks.json').complete(
 			url: updateURL,
 			data: {
 				'task': { 
-					'content':  taskContent[taskKeys[key]] + ' #hrs-' + taskHrs[taskKeys[key]] 
+					'content':  taskContent[taskKeys[key]] + " #hrs-" + taskHrs[taskKeys[key]] 
 				}
 			}
 		}).complete( function(d){ 
