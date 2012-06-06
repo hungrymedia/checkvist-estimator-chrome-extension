@@ -1,12 +1,21 @@
+var rootAPIUrl = 'http://beta.checkvist.com/'; 
 var url = document.location.toString();
 var urlParts = url.split('/');
 var listID = urlParts.pop().replace('#','');
 console.log("listID: " + listID);
 var taskHrs = {};
 var taskContent = {};
+/******************************************************************************
 
-$.getJSON('http://checkvist.com/checklists/' + listID + '/tasks.json').complete( function(data){
+TO DO: 
+Need better method to update ALL levels of list, not just immediate parents of
+those with #hrs tags
+
+******************************************************************************/
+
+$.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
 	var listData = JSON.parse(data.responseText);
+	console.log(listData);
 	for(var task in listData){
 		taskContent[listData[task].id] = listData[task].content;
 		if( Object.keys(listData[task].tags).length > 0 ){
@@ -26,17 +35,17 @@ $.getJSON('http://checkvist.com/checklists/' + listID + '/tasks.json').complete(
 	}
 	console.log(taskHrs);
 	// update parent tasks with calculated hours
-	// /checklists/checklist_id/tasks/task_id.json
 	var taskKeys = Object.keys(taskHrs);
 	for( var key in taskKeys ){
-		updateURL = 'http://checkvist.com/checklists/' + listID + '/tasks/' + taskKeys[key] + '.json';
+		updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + taskKeys[key] + '.json';
 		console.log(updateURL);
+		// need to replace any existing #hrs- tags, not simply set the tags, overwriting all
 		$.ajax({
 			type: 'PUT', 
 			url: updateURL,
 			data: {
 				'task': { 
-					'content':  taskContent[taskKeys[key]] + " #hrs-" + taskHrs[taskKeys[key]] 
+					'tags':  '#hrs-' + taskHrs[taskKeys[key]] 
 				}
 			}
 		}).complete( function(d){ 
