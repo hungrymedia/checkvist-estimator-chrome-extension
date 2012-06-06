@@ -7,7 +7,7 @@
   ],
   "content_scripts": [
     {
-      "matches": ["http://www.checkvist.com/*"],
+      "matches": ["http://www.checkvist.com/*", "http://beta.checkvist.com/*"],
       "js": ["jquery.js", "content_script.js"]
     }
   ],
