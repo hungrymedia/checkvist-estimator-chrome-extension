@@ -1,13 +1,13 @@
 {
   "name": "Total hours of checkvist items",
-  "version": "1.0",
+  "version": "0.9",
   "background": { "scripts": ["background.js"] },
   "permissions": [
     "tabs", "http://*/*"
   ],
   "content_scripts": [
     {
-      "matches": ["http://www.checkvist.com/*", "http://beta.checkvist.com/*"],
+      "matches": ["http://www.checkvist.com/*", "https://beta.checkvist.com/*"],
       "js": ["jquery.js", "content_script.js"]
     }
   ],
