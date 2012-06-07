@@ -3,11 +3,16 @@
   "version": "0.9",
   "background": { "scripts": ["background.js"] },
   "permissions": [
-    "tabs", "http://*/*"
+    "tabs", "http://*/*", "https://*/*"
   ],
   "content_scripts": [
     {
-      "matches": ["http://www.checkvist.com/*", "https://beta.checkvist.com/*"],
+      "matches": [
+				"http://www.checkvist.com/*", 
+				"https://www.checkvist.com/*", 
+				"http://beta.checkvist.com/*", 
+				"https://beta.checkvist.com/*"
+			],
       "js": ["jquery.js", "content_script.js"]
     }
   ],
@@ -15,5 +20,8 @@
     "default_title": "Total Checkvist hours",
     "default_icon": "icon.png"
   },
-  "manifest_version": 2
+  "manifest_version": 2, 
+   "icons":{
+       "128":"icon_50.png"
+   }
 }
