@@ -6,6 +6,7 @@
   "permissions": [
     "tabs", "http://*/*", "https://*/*"
   ],
+	"options_page": "options.html", 
   "content_scripts": [
     {
       "matches": [
@@ -18,7 +19,7 @@
     }
   ],
   "browser_action": {
-    "default_title": "Total Checkvist hours",
+    "default_title": "Checkvist time estimate",
     "default_icon": "icon.png"
   },
   "manifest_version": 2, 

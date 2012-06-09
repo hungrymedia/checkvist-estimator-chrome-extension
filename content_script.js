@@ -1,3 +1,9 @@
+/*
+ * @author Warren Harrison / http://hungry-media.com/
+ */
+
+console.log(extensionOptions);
+
 var rootAPIUrl = 'https://beta.checkvist.com/'; 
 var url = document.location.toString();
 var urlParts = url.split('/');
@@ -8,9 +14,8 @@ var tagPattern = 'hrs-';
 /******************************************************************************
 
 TO DO: 
-- allow for customizable tag prefix or suffix for hours
-- allow for option to use days with customizable tag prefix or suffix
-- allow for choice of created tags in hours, days or both 
+- add message passing to get options to content_script
+- add logic to actually use options instead of hard coded values
 
 ******************************************************************************/
 

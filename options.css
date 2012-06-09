@@ -1,0 +1,44 @@
+/*
+ * @author Warren Harrison / http://hungry-media.com/
+ */
+
+body{
+  font-family: 'Lucida Grande', sans-serif;
+  font-size: 75%;
+  color: #666;
+  width: 700px;
+  margin-left: 150px;
+}
+h1, h2, h3, h4{
+  font-weight: normal;
+  color: #303942;
+  border-bottom: 1px solid #EEE;
+  padding: 1em 0;
+}
+h1{
+  background: url(icon_50.png) left center no-repeat;
+  padding-left: 75px;
+}
+h2{
+  margin-top: 1em;
+  padding-bottom: 0.5em;
+}
+label label{
+  margin-right: 1em;
+}
+#status{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 105px;
+  padding: 15px;
+  background: #FFC;
+  border: 1px solid #EEE;
+  border-top: none;
+  border-left: none;
+  border-bottom-right-radius: 1em;
+  display: none;
+}
+input#hours-per-day{
+  width: 3em !important;
+}
