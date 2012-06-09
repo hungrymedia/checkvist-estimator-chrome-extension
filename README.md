@@ -10,9 +10,8 @@ To try it out, download the compiled extension from the [downloads area](https:/
 -->
 
 ## TO DO: 
-- allow for customizable tag prefix or suffix for hours
-- allow for option to use days with customizable tag prefix or suffix
-- allow for choice of created tags in hours, days or both 
+- add message passing to get options to content_script
+- add logic to actually use options instead of hard coded values
 
 
 
