@@ -23,40 +23,35 @@ $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( functio
 	}
 	for( var t in allTasks ){
 		if( allTasks[t].parent_id == 0 ){
-			console.log(allTasks[t].id + ' has no parent.');
 			getChildTotal(allTasks[t].id);
 		}
 	}
 	for( var t in allTasks ){
-			updateTaskOnServer(allTasks[t].id);
+	  var thisTask = allTasks[t]
+	  deleteTagsMatching(thisTask.id, tagPattern);
+	  if( thisTask.hours > 0 ){
+		  thisTask.tags[tagPattern + thisTask.hours] = false;
+	  }
+		updateTaskOnServer(thisTask.id);
 	}
 });
 
 function getChildTotal(taskID){
 	var thisTask = allTasks[taskID];
-	console.log('Processing task: ' + thisTask.id);
 	if( thisTask.tasks.length == 0 ){
-		console.log("Task has no children");
 		// has no children, set its hours, clear hours tag
 		var tags = Object.keys(thisTask.tags);
-		console.log(tags);
 		for( var tag in tags ){
-			console.log('Processing tag: ' + tags[tag]);
 			var tagText = tags[tag].toString();
 			if( tagText.substr(0, 4) == tagPattern ){
 				thisTask.hours = parseFloat(tagText.substr(4));
-				console.log('Setting hours to : ' + thisTask.hours);
 			}
 		}
 	}else{
 		for( var child in thisTask.tasks){
-			console.log('Found child task: ' + thisTask.tasks[child]);
 			getChildTotal(thisTask.tasks[child]);
 			thisTask.hours += allTasks[thisTask.tasks[child]].hours;
 		}
-	}
-	if( deleteTagsMatching(thisTask.id, tagPattern) ){
-		thisTask.tags[tagPattern + thisTask.hours] = false;
 	}
 }
 
@@ -66,9 +61,7 @@ function deleteTagsMatching(id, pattern){
 	for( var t in taskTags ){
 		if( taskTags[t].substr(0, pattern.length) == pattern ){
 			// don't bother to delete if the tag already matches the hours
-			console.log(pattern + ' -- ' + allTasks[id].hours != taskTags[t]);
 			if( pattern + allTasks[id].hours != taskTags[t] ){
-				console.log("deleting tag: " + taskTags[t] + ' from :' + id);
 				delete allTasks[id].tags[taskTags[t]];
 				numDeletions++;
 			}
@@ -93,6 +86,5 @@ function updateTaskOnServer( taskID ){
 			}
 		}
 	}).complete( function(d){ 
-		console.log(d);
 	});
 }
