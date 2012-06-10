@@ -142,8 +142,7 @@ function updateTaskOnServer( taskID ){
   }
 	updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + taskID + '.json';
 	var tagsCommaDelimited = Object.keys( allTasks[taskID].tags ).join(',');
-	console.log(updateURL);
-	console.log(tagsCommaDelimited);
+	console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + taskID + ')');
 //	return false;
 	$.ajax({
 		type: 'PUT', 
