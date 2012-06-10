@@ -5,13 +5,13 @@
 // if no options saved to local storage, yet. Set defaults and save to storage
 var defaultOptions = {
   'hours' : {
-    'tag' : '', 
-    'prefix' : false, 
+    'tag' : 'h', 
+    'prefix' : true, 
     'generate' : true
   },
   'days' : {
-    'tag' : '', 
-    'prefix' : false, 
+    'tag' : 'd', 
+    'prefix' : true, 
     'generate' : false, 
     'hoursPer' : 8
   }
