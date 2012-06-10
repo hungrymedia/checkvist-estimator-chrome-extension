@@ -6,12 +6,12 @@
 var defaultOptions = {
   'hours' : {
     'tag' : 'h', 
-    'prefix' : true, 
+    'prefix' : false, 
     'generate' : true
   },
   'days' : {
     'tag' : 'd', 
-    'prefix' : true, 
+    'prefix' : false, 
     'generate' : false, 
     'hoursPer' : 8
   }
