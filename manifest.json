@@ -1,7 +1,7 @@
 {
 	"name": "Checkvist Time Estimate",
 	"description": "Totals any child list items with tags matching hrs-nn (e.g. hrs-8) and applies appropriate hrs tags to parent items. Useful for using Checkvist for basic project estimates.",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "background": { "scripts": ["background.js"] },
   "permissions": [
     "tabs", "http://*/*", "https://*/*"
@@ -15,7 +15,7 @@
 				"http://beta.checkvist.com/*", 
 				"https://beta.checkvist.com/*"
 			],
-      "js": ["jquery.js", "content_script.js"]
+      "js": ["jquery.js", "default_options.js", "content_script.js"]
     }
   ],
   "browser_action": {

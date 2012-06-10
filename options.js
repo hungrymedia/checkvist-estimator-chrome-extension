@@ -24,8 +24,14 @@ $('input').change( function(e){
     case 'hours-as-prefix':
       extensionOptions.hours.prefix = e.target.checked ? true : false;
       break;
+    case 'hours-as-suffix':
+      extensionOptions.hours.prefix = e.target.checked ? false : true;
+      break;
     case 'days-as-prefix':
       extensionOptions.days.prefix = e.target.checked ? true : false;
+      break;
+    case 'days-as-suffix':
+      extensionOptions.days.prefix = e.target.checked ? false : true;
       break;
     case 'create-hours-tags':
       extensionOptions.hours.generate = e.target.checked ? true : false;
@@ -49,10 +55,13 @@ function updateExamples(){
   var defaultDays = Math.round( ( defaultHrs / hrsPerDay ) * 10 ) / 10;
   var hrsExample = $('#hours-as-prefix:checked').length ? $('#hours-tag').val() + defaultHrs : defaultHrs + $('#hours-tag').val();
   var daysExample = $('#days-as-prefix:checked').length ? $('#days-tag').val() + defaultDays : defaultDays + $('#days-tag').val();
+  $('#generated-example').empty();
   if( $('#hours-tag').val() != '' ){
     $('#hours-example').text( hrsExample );
+    if( $('#create-hours-tags').prop('checked') ) $('#generated-example').append( hrsExample + ' ');
   }
   if( $('#days-tag').val() != '' ){
     $('#days-example').text( daysExample );
+    if( $('#create-days-tags').prop('checked') ) $('#generated-example').append( daysExample );
   }
 }
