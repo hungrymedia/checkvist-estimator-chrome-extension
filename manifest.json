@@ -1,6 +1,6 @@
 {
 	"name": "Checkvist Time Estimate",
-	"description": "Totals any child list items with tags matching hrs-nn (e.g. hrs-8) and applies appropriate hrs tags to parent items. Useful for using Checkvist for basic project estimates.",
+	"description": "Adds ability to use list item tags to estimate timing and creates list totals up the list tree.",
   "version": "1.0",
   "background": { "scripts": ["background.js"] },
   "permissions": [
