@@ -8,9 +8,10 @@ TO DO:
 
 ******************************************************************************/
 
-var rootAPIUrl = 'https://beta.checkvist.com/'; 
 var url = document.location.toString();
 var urlParts = url.split('/');
+var rootAPIUrl = urlParts[0] + '//' + urlParts[2] + '/';
+console.log(rootAPIUrl); 
 var listID = urlParts.pop().replace('#','');
 console.log("listID: " + listID);
 var allTasks = {};
@@ -71,7 +72,7 @@ function getChildTotal(taskID){
 			var matchesHrs = tagPatternHrs.exec(tagText);
 			if( matchesHrs && matchesHrs.length > 0 ){ 
 			  thisTask.hours = matchesHrs[1];
-			  thisTask.days = Math.round( (thisTask.hours / extensionOptions.days.hoursPer) * 10) / 10;
+			  thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
 		  }
 			var matchesDays = tagPatternDays.exec(tagText);
 			if( matchesDays && matchesDays.length > 0 ){ 
@@ -83,7 +84,7 @@ function getChildTotal(taskID){
 		for( var child in thisTask.tasks){
 			getChildTotal(thisTask.tasks[child]);
 			thisTask.hours += parseInt(allTasks[thisTask.tasks[child]].hours);
-			thisTask.days = Math.round( (thisTask.hours / extensionOptions.days.hoursPer) * 10) / 10;
+			thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
 		}
 	}
 }
