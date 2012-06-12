@@ -1,0 +1,4 @@
+.tag.timeTag:before {
+  font-family: FontAwesome;
+  content: "\f017  ";
+}
