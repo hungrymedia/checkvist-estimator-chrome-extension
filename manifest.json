@@ -10,12 +10,15 @@
   "content_scripts": [
     {
       "matches": [
-				"http://www.checkvist.com/*", 
-				"https://www.checkvist.com/*", 
-				"http://beta.checkvist.com/*", 
+				"http://checkvist.com/*",
+				"https://checkvist.com/*",
+				"http://www.checkvist.com/*",
+				"https://www.checkvist.com/*",
+				"http://beta.checkvist.com/*",
 				"https://beta.checkvist.com/*"
 			],
-      "js": ["jquery.js", "default_options.js", "content_script.js"]
+      "js": ["jquery.js", "default_options.js", "content_script.js"],
+      "css": ["timeStyle.css"]
     }
   ],
   "browser_action": {

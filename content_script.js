@@ -27,39 +27,41 @@ chrome.extension.sendRequest({command: "getOptions"}, function(response) {
   tagPatternDays = extensionOptions.days.prefix ? 
                       new RegExp('^' + extensionOptions.days.tag + '([0-9]+)$') : 
                       new RegExp('^([0-9]+)' + extensionOptions.days.tag + '$');
+});
 
+function doRecalculateTags() {
   $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
 //    console.log(data.responseText);
-  	var listData = JSON.parse(data.responseText);
-  	for(var task in listData){
-  		var thisID = listData[task].id;
-  		allTasks[thisID] = listData[task];
-  		allTasks[thisID]['hours'] = 0;
-  		allTasks[thisID]['days'] = 0;
-  		allTasks[thisID]['changed'] = false;
-  	}
-  	for( var t in allTasks ){
-  		if( allTasks[t].parent_id == 0 ){
-  			getChildTotal(allTasks[t].id);
-  		}
-  	}
-  	for( var t in allTasks ){
-  	  var thisTask = allTasks[t]
-  	  scrubCurrentTags(thisTask.id);
-  	  if( thisTask.hours > 0 && extensionOptions.hours.generate ){
-  	    var thisTag = generateTag(thisTask.id, 'h');
-  		  thisTask.tags[thisTag] = false;
-  		  thisTask.changed = true;
-  	  }
-  	  if( thisTask.days > 0 && extensionOptions.days.generate ){
-  	    var thisTag = generateTag(thisTask.id, 'd');
-  		  thisTask.tags[thisTag] = false;
-  		  thisTask.changed = true;
-  	  }
-  		if( thisTask.changed ) updateTaskOnServer(thisTask.id);
-  	}
+    var listData = JSON.parse(data.responseText);
+    for(var task in listData){
+      var thisID = listData[task].id;
+      allTasks[thisID] = listData[task];
+      allTasks[thisID]['hours'] = 0;
+      allTasks[thisID]['days'] = 0;
+      allTasks[thisID]['changed'] = false;
+    }
+    for( var t in allTasks ){
+      if( allTasks[t].parent_id == 0 ){
+        getChildTotal(allTasks[t].id);
+      }
+    }
+    for( var t in allTasks ){
+      var thisTask = allTasks[t]
+      scrubCurrentTags(thisTask.id);
+      if( thisTask.hours > 0 && extensionOptions.hours.generate ){
+        var thisTag = generateTag(thisTask.id, 'h');
+        thisTask.tags[thisTag] = false;
+        thisTask.changed = true;
+      }
+      if( thisTask.days > 0 && extensionOptions.days.generate ){
+        var thisTag = generateTag(thisTask.id, 'd');
+        thisTask.tags[thisTag] = false;
+        thisTask.changed = true;
+      }
+      if( thisTask.changed ) updateTaskOnServer(thisTask.id);
+    }
   });
-});
+}
 
 function getChildTotal(taskID){
 	var thisTask = allTasks[taskID];
@@ -130,18 +132,14 @@ function scrubCurrentTags(id){
 			}
 		}
 	}
-	if( numDeletions > 0 ){
-		return true;
-	}else{
-		return false;
-	}
+  return numDeletions > 0;
 }
 
 function updateTaskOnServer( taskID ){
   if( allTasks[taskID].changed == false ){
     return false;
   }
-	updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + taskID + '.json';
+	var updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + taskID + '.json';
 	var tagsCommaDelimited = Object.keys( allTasks[taskID].tags ).join(',');
 	console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + taskID + ')');
 //	return false;
@@ -153,7 +151,38 @@ function updateTaskOnServer( taskID ){
 				'tags':  tagsCommaDelimited
 			}
 		}
-	}).complete( function(d){ 
+	}).complete( function(d){
+    document.location.reload();
 	  return true;
 	});
 }
+
+function initTimeTagsClasses() {
+
+  // FontAwesome is available on beta.checkvist.com only (so far)
+  if (url.indexOf("beta") == -1) return;
+
+  var count = 0;
+
+  var doSetTags = function() {
+    // If content is loaded or 10 seconds passed
+    if ($(".tag").length > 0 || count > 100) {
+
+      $(".tag").each(function(t) {
+        var txt = $(this).text();
+        if (tagPatternHrs.test(txt) || tagPatternDays.test(txt)) {
+          $(this).addClass('timeTag');
+        }
+      });
+    }
+    else {
+      count++;
+      setTimeout(doSetTags, 100);
+    }
+  };
+
+  doSetTags();
+}
+
+initTimeTagsClasses();
+
