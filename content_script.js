@@ -166,7 +166,9 @@ function initTimeTagsClasses() {
 
   var doSetTags = function() {
     // If content is loaded or 10 seconds passed
-    if ($(".tag").length > 0 || count > 100) {
+    // Should _not_ consider tags in list names and wait for real content
+    var hasLoadedContentWithTags = ($("#tags_content .tag").length + $(".topLevel .tag").length) > 0;
+    if (hasLoadedContentWithTags || count > 100) {
 
       $(".tag").each(function(t) {
         var txt = $(this).text();
