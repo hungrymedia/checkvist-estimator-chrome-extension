@@ -16,12 +16,12 @@ var listID = urlParts.pop().replace('#','');
 console.log("listID: " + listID);
 var allTasks = {};
 var extensionOptions = {};
-var tagPatternHrs = new RegExp();
-var tagPatternDays = new RegExp();
+var tagPatternHrs = /^([0-9]+)h/;
+var tagPatternDays = /^([0-9]+)d/;
 
 chrome.extension.sendRequest({command: "getOptions"}, function(response) {
   extensionOptions = response.answer;
-  tagPatternHrs = extensionOptions.hours.prefix ? 
+  tagPatternHrs = extensionOptions.hours.prefix ?
                       new RegExp('^' + extensionOptions.hours.tag + '([0-9]+)$') : 
                       new RegExp('^([0-9]+)' + extensionOptions.hours.tag + '$');
   tagPatternDays = extensionOptions.days.prefix ? 
