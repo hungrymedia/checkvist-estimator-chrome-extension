@@ -33,6 +33,7 @@ function doRecalculateTags() {
   $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
 //    console.log(data.responseText);
     var listData = JSON.parse(data.responseText);
+    console.log(listData);
     for(var task in listData){
       var thisID = listData[task].id;
       allTasks[thisID] = listData[task];
@@ -85,7 +86,12 @@ function getChildTotal(taskID){
 	}else{
 		for( var child in thisTask.tasks){
 			getChildTotal(thisTask.tasks[child]);
-			thisTask.hours += parseInt(allTasks[thisTask.tasks[child]].hours);
+			if( extensionOptions.includeClosed || 
+			    ( extensionOptions.includeClosed == false && 
+			      allTasks[thisTask.tasks[child]].status == 0 ) 
+			){
+			  thisTask.hours += parseInt(allTasks[thisTask.tasks[child]].hours);
+		  }
 			thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
 		}
 	}

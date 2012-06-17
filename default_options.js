@@ -14,7 +14,8 @@ var defaultOptions = {
     'prefix' : false, 
     'generate' : false, 
     'hoursPer' : 8
-  }
+  }, 
+  'includeClosed' : true
 }
 // load options from storage
 var extensionOptions = localStorage['ExtensionOptions'];

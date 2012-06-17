@@ -10,6 +10,7 @@ extensionOptions.days.prefix ? $('#days-as-prefix').prop('checked', true) : $('#
 $('#hours-per-day').val( extensionOptions.days.hoursPer );
 extensionOptions.hours.generate ? $('#create-hours-tags').prop('checked', true) : $('#create-hours-tags').prop('checked', false);
 extensionOptions.days.generate ? $('#create-days-tags').prop('checked', true) : $('#create-days-tags').prop('checked', false);
+extensionOptions.includeClosed ? $('#include-closed').prop('checked', true) : $('#include-closed').prop('checked', false);
 updateExamples();
 
 // on each UI element update, save to local storage
@@ -41,6 +42,9 @@ $('input').change( function(e){
       break;
     case 'hours-per-day':
       extensionOptions.days.hoursPer = e.target.value;
+      break;
+    case 'include-closed':
+      extensionOptions.includeClosed = e.target.checked ? true : false;
       break;
   }
   localStorage['ExtensionOptions'] = JSON.stringify(extensionOptions);
