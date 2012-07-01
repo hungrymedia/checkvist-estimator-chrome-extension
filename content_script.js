@@ -29,6 +29,16 @@ chrome.extension.sendRequest({command: "getOptions"}, function(response) {
                       new RegExp('^([0-9]+)' + extensionOptions.days.tag + '$');
 });
 
+var numChanged = function(){
+  n = 0
+  for(var task in allTasks){
+    if( allTasks[task].changed ){
+      n++;
+    }
+  }
+  return n;
+};
+
 function doRecalculateTags() {
   $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
 //    console.log(data.responseText);
@@ -46,6 +56,7 @@ function doRecalculateTags() {
         getChildTotal(allTasks[t].id);
       }
     }
+    var currTask = 0;
     for( var t in allTasks ){
       var thisTask = allTasks[t]
       scrubCurrentTags(thisTask.id);
@@ -59,7 +70,12 @@ function doRecalculateTags() {
         thisTask.tags[thisTag] = false;
         thisTask.changed = true;
       }
-      if( thisTask.changed ) updateTaskOnServer(thisTask.id);
+      if( thisTask.changed ){ 
+        currTask++;
+        var isLast = false;
+        if( currTask == numChanged() ){ isLast = true; }
+        updateTaskOnServer(thisTask.id, isLast);
+      }
     }
   });
 }
@@ -141,14 +157,17 @@ function scrubCurrentTags(id){
   return numDeletions > 0;
 }
 
-function updateTaskOnServer( taskID ){
+function updateTaskOnServer( taskID, isLast ){
   if( allTasks[taskID].changed == false ){
     return false;
   }
 	var updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + taskID + '.json';
 	var tagsCommaDelimited = Object.keys( allTasks[taskID].tags ).join(',');
-	console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + taskID + ')');
-//	return false;
+	// work around fact that API will not set tags to empty string
+	if( tagsCommaDelimited == '' ){ 
+	  tagsCommaDelimited = ',';
+	}
+	console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + allTasks[taskID].content + ')');
 	$.ajax({
 		type: 'PUT', 
 		url: updateURL,
@@ -158,7 +177,8 @@ function updateTaskOnServer( taskID ){
 			}
 		}
 	}).complete( function(d){
-    document.location.reload();
+	  // only reload page if we've updated the last changed tag
+    if( isLast ){ document.location.reload(); }
 	  return true;
 	});
 }
