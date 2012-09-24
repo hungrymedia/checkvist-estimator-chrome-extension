@@ -185,9 +185,6 @@ function updateTaskOnServer( taskID, isLast ){
 
 function initTimeTagsClasses() {
 
-  // FontAwesome is available on beta.checkvist.com only (so far)
-  if (url.indexOf("beta") == -1) return;
-
   var count = 0;
 
   var doSetTags = function() {
