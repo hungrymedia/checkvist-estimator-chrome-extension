@@ -7,6 +7,17 @@
 <body>
 <div id="status"></div>
 <h1>CheckVist TimeCalc Options</h1>
+<h2>Minutes</h2>
+<p>Fill in the desired prefix or suffix for your minutes tag.</p>
+<label for="tag-minutes">Minutes tag
+	<input type="text" id="minutes-tag" />
+	<label for="minutes-as-prefix">
+		<input type="radio" name="minutes-as" id="minutes-as-prefix" value="prefix" />prefix</label>	
+	<label for="minutes-as-suffix">
+		<input type="radio" name="minutes-as" id="minutes-as-suffix" value="suffix" />suffix</label>
+		(<em>example: <span id="minutes-example"></span></em>)
+</label>
+
 <h2>Hours</h2>
 <p>Fill in the desired prefix or suffix for your hours tag.</p>
 <label for="tag-hours">Hours tag
@@ -36,6 +47,8 @@
 <p>Choose for this extension to generate hours and/or days tags.<br />
 	<em>Note that days will be rounded up to the nearest full day.</em></p>
 <label for="tag-days">Generate tags for: 
+	<label for="create-minutes-tags">
+		<input type="checkbox" id="create-minutes-tags" value="minutes" />minutes</label>	
 	<label for="create-hours-tags">
 		<input type="checkbox" id="create-hours-tags" value="hours" />hours</label>	
 	<label for="create-days-tags">

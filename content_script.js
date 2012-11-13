@@ -16,11 +16,15 @@ var listID = urlParts.pop().replace('#','');
 console.log("listID: " + listID);
 var allTasks = {};
 var extensionOptions = {};
+var tagPatternMins = /^([0-9]+)m/;
 var tagPatternHrs = /^([0-9]+)h/;
 var tagPatternDays = /^([0-9]+)d/;
 
 chrome.extension.sendRequest({command: "getOptions"}, function(response) {
   extensionOptions = response.answer;
+  tagPatternMins = extensionOptions.minutes.prefix ?
+                      new RegExp('^' + extensionOptions.minutes.tag + '([0-9]+)$') : 
+                      new RegExp('^([0-9]+)' + extensionOptions.minutes.tag + '$');
   tagPatternHrs = extensionOptions.hours.prefix ?
                       new RegExp('^' + extensionOptions.hours.tag + '([0-9]+)$') : 
                       new RegExp('^([0-9]+)' + extensionOptions.hours.tag + '$');
@@ -47,6 +51,7 @@ function doRecalculateTags() {
     for(var task in listData){
       var thisID = listData[task].id;
       allTasks[thisID] = listData[task];
+      allTasks[thisID]['minutes'] = 0;
       allTasks[thisID]['hours'] = 0;
       allTasks[thisID]['days'] = 0;
       allTasks[thisID]['changed'] = false;
@@ -60,6 +65,11 @@ function doRecalculateTags() {
     for( var t in allTasks ){
       var thisTask = allTasks[t]
       scrubCurrentTags(thisTask.id);
+      if( thisTask.minutes > 0 && extensionOptions.minutes.generate ){
+        var thisTag = generateTag(thisTask.id, 'm');
+        thisTask.tags[thisTag] = false;
+        thisTask.changed = true;
+      }
       if( thisTask.hours > 0 && extensionOptions.hours.generate ){
         var thisTag = generateTag(thisTask.id, 'h');
         thisTask.tags[thisTag] = false;
@@ -88,6 +98,12 @@ function getChildTotal(taskID){
 		for( var tag in tags ){
 			var tagText = tags[tag].toString();
 			// capture regexp results
+      var matchesMins = tagPatternMins.exec(tagText);
+      if( matchesMins && matchesMins.length > 0 ){ 
+        thisTask.minutes = matchesMins[1];
+        thisTask.hours = Math.ceil(thisTask.minutes / extensionOptions.hours.minsPer);
+        thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
+      }
 			var matchesHrs = tagPatternHrs.exec(tagText);
 			if( matchesHrs && matchesHrs.length > 0 ){ 
 			  thisTask.hours = matchesHrs[1];
@@ -117,6 +133,11 @@ function generateTag(id, type){
   var thisTask = allTasks[id];
 	
   switch (type){
+    case 'm':
+      return extensionOptions.minutes.prefix ? 
+              extensionOptions.minutes.tag + thisTask.minutes : 
+              thisTask.minutes + extensionOptions.minutes.tag;
+      break;
     case 'h':
       return extensionOptions.hours.prefix ? 
               extensionOptions.hours.tag + thisTask.hours : 
@@ -135,8 +156,17 @@ function scrubCurrentTags(id){
 	
 	var numDeletions = 0;
 	for( var t in taskTags ){
-	  var hoursTag = generateTag(id, 'h');
+    var minsTag = generateTag(id, 'm');
+    var hoursTag = generateTag(id, 'h');
 	  var daysTag = generateTag(id, 'd');
+    if( tagPatternMins.test( taskTags[t] ) ){
+      // don't bother to delete if the tag already matches the minutes
+      if( !extensionOptions.minutes.generate || minsTag != taskTags[t] ){
+        delete allTasks[id].tags[taskTags[t]];
+        allTasks[id].changed = true;
+        numDeletions++;
+      }
+    }
 		if( tagPatternHrs.test( taskTags[t] ) ){
 			// don't bother to delete if the tag already matches the hours
 			if( !extensionOptions.hours.generate || hoursTag != taskTags[t] ){
@@ -195,7 +225,7 @@ function initTimeTagsClasses() {
 
       $(".tag").each(function(t) {
         var txt = $(this).text();
-        if (tagPatternHrs.test(txt) || tagPatternDays.test(txt)) {
+        if (tagPatternMins.test(txt) || tagPatternHrs.test(txt) || tagPatternDays.test(txt)) {
           $(this).addClass('timeTag');
         }
       });
