@@ -2,7 +2,7 @@
  * @author Warren Harrison / http://hungry-media.com/
  */
 chrome.browserAction.onClicked.addListener(function(tab) {
-  chrome.tabs.executeScript( null, { code: "doRecalculateTags();" } );
+  chrome.tabs.executeScript( null, { code: "main();" } );
 });
 
 chrome.extension.onRequest.addListener(

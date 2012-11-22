@@ -1,7 +1,7 @@
 {
 	"name": "Checkvist TimeCalc",
 	"description": "Time calculation for Checkvist list item tags.",
-  "version": "1.3.5",
+  "version": "1.4",
   "background": { "scripts": ["background.js"] },
   "permissions": [
     "tabs", "http://*/*", "https://*/*"

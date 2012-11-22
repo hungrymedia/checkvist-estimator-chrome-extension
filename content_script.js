@@ -11,9 +11,7 @@ TO DO:
 var url = document.location.toString();
 var urlParts = url.split('/');
 var rootAPIUrl = urlParts[0] + '//' + urlParts[2] + '/';
-console.log(rootAPIUrl); 
 var listID = urlParts.pop().replace('#','');
-console.log("listID: " + listID);
 var allTasks = {};
 var extensionOptions = {};
 var tagPatternMins = /^([0-9]+)m/;
@@ -33,6 +31,68 @@ chrome.extension.sendRequest({command: "getOptions"}, function(response) {
                       new RegExp('^([0-9]+)' + extensionOptions.days.tag + '$');
 });
 
+
+function main(){
+  parseCurrentTags();
+}
+
+function parseCurrentTags(){
+  $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
+    var listData = JSON.parse(data.responseText);
+    for(var task in listData){
+      var thisID = listData[task].id;
+      allTasks[thisID] = listData[task];
+      allTasks[thisID]['minutes'] = 0;
+      allTasks[thisID]['changed'] = false;
+      distillToMinutes(thisID);
+    }
+    recalculateAll();
+  });
+}
+
+function recalculateAll(){
+  for(var task in allTasks){
+    allTasks[task].minutes = calculateMinutes(allTasks[task]);
+    logIfChanged(allTasks[task]);
+  }
+}
+
+function distillToMinutes(taskID){
+  var thisTask = allTasks[taskID];
+  var thisTaskTags = Object.keys(thisTask.tags);
+  for( var tag in thisTaskTags ){
+    var tagText = thisTaskTags[tag].toString();
+    var matchesMins = tagPatternMins.exec(tagText);
+    var matchesHrs = tagPatternHrs.exec(tagText);
+    var matchesDays = tagPatternDays.exec(tagText);
+
+    if( matchesMins && matchesMins.length > 0 ){ 
+      thisTask.minutes = parseInt(matchesMins[1]);
+    }else if( matchesHrs && matchesHrs.length > 0 ){ 
+      thisTask.minutes = parseInt(matchesHrs[1] * 60);
+    }else if( matchesDays && matchesDays.length > 0 ){
+      thisTask.minutes = parseInt(matchesDays[1] * 60 * extensionOptions.days.hoursPer);
+    }
+  }
+}
+
+function calculateMinutes(task){
+  if( task.tasks > 0 ){
+    task.minutes = 0;
+    for( childTask in task.tasks ){
+      task.minutes += calculateMinutes(allTasks[task.tasks[childTask]]);
+      task.changed = true;
+    }
+  }
+  return task.minutes;
+}
+
+function logIfChanged(task){
+  if( task.changed ){
+    console.log(task);
+  }
+}
+
 var numChanged = function(){
   n = 0
   for(var task in allTasks){
@@ -43,6 +103,7 @@ var numChanged = function(){
   return n;
 };
 
+/*
 function doRecalculateTags() {
   $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
 //    console.log(data.responseText);
@@ -65,6 +126,7 @@ function doRecalculateTags() {
     for( var t in allTasks ){
       var thisTask = allTasks[t]
       scrubCurrentTags(thisTask.id);
+      thisTask.minutes = parseInt(thisTask.minutes);
       if( thisTask.minutes > 0 && extensionOptions.minutes.generate ){
         var thisTag = generateTag(thisTask.id, 'm');
         thisTask.tags[thisTag] = false;
@@ -90,6 +152,8 @@ function doRecalculateTags() {
   });
 }
 
+
+
 function getChildTotal(taskID){
 	var thisTask = allTasks[taskID];
 	if( thisTask.tasks.length == 0 ){
@@ -101,18 +165,20 @@ function getChildTotal(taskID){
       var matchesMins = tagPatternMins.exec(tagText);
       if( matchesMins && matchesMins.length > 0 ){ 
         thisTask.minutes = matchesMins[1];
-        thisTask.hours = Math.ceil(thisTask.minutes / extensionOptions.hours.minsPer);
+        thisTask.hours = Math.ceil(thisTask.minutes / 60);
         thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
       }
 			var matchesHrs = tagPatternHrs.exec(tagText);
 			if( matchesHrs && matchesHrs.length > 0 ){ 
 			  thisTask.hours = matchesHrs[1];
 			  thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
+        thisTask.mins = thisTask.hours * 60;
 		  }
 			var matchesDays = tagPatternDays.exec(tagText);
 			if( matchesDays && matchesDays.length > 0 ){ 
 			  thisTask.days = matchesDays[1];
 			  thisTask.hours = thisTask.days * extensionOptions.days.hoursPer;
+        thisTask.mins = thisTask.hours * 60;
 		  }
 		}
 	}else{
@@ -122,7 +188,8 @@ function getChildTotal(taskID){
 			    ( extensionOptions.includeClosed == false && 
 			      allTasks[thisTask.tasks[child]].status == 0 ) 
 			){
-			  thisTask.hours += parseInt(allTasks[thisTask.tasks[child]].hours);
+        thisTask.mins += parseInt(allTasks[thisTask.tasks[child]].mins);
+        thisTask.hours += parseInt(allTasks[thisTask.tasks[child]].hours);
 		  }
 			thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
 		}
@@ -241,3 +308,4 @@ function initTimeTagsClasses() {
 
 initTimeTagsClasses();
 
+*/
