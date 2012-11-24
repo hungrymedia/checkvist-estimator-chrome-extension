@@ -17,6 +17,7 @@ var extensionOptions = {};
 var tagPatternMins = /^([0-9]+)m/;
 var tagPatternHrs = /^([0-9]+)h/;
 var tagPatternDays = /^([0-9]+)d/;
+var numTasks = 0;
 
 chrome.extension.sendRequest({command: "getOptions"}, function(response) {
   extensionOptions = response.answer;
@@ -40,6 +41,7 @@ function parseCurrentTags(){
   $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
     var listData = JSON.parse(data.responseText);
     for(var task in listData){
+      numTasks++;
       var thisID = listData[task].id;
       allTasks[thisID] = listData[task];
       allTasks[thisID]['minutes'] = 0;
@@ -47,15 +49,53 @@ function parseCurrentTags(){
       distillToMinutes(thisID);
     }
     recalculateAll();
+    tagAll();
   });
 }
 
 function recalculateAll(){
   for(var task in allTasks){
-    allTasks[task].minutes = calculateMinutes(allTasks[task]);
-    logIfChanged(allTasks[task]);
+    if( allTasks[task].parent_id == 0){
+      calculateChildMinutes(allTasks[task]);
+    }
   }
 }
+
+function tagAll(){
+  var taskIdx = 0;
+  for(var task in allTasks){
+    newTags = {};
+    if(allTasks[task].minutes > 0){
+      if( extensionOptions.minutes.generate ){
+        extensionOptions.minutes.prefix ? 
+          newTags[extensionOptions.minutes.tag + allTasks[task].minutes] = false : 
+          newTags[allTasks[task].minutes + extensionOptions.minutes.tag] = false
+      }
+      if( extensionOptions.hours.generate ){
+        var taskHours = Math.ceil( allTasks[task].minutes / 60 );
+        extensionOptions.hours.prefix ? 
+          newTags[extensionOptions.hours.tag + taskHours] = false : 
+          newTags[taskHours + extensionOptions.hours.tag] = false
+      }
+      if( extensionOptions.days.generate ){
+        var taskDays = Math.ceil( allTasks[task].minutes / 60 / extensionOptions.days.hoursPer );
+        extensionOptions.days.prefix ? 
+          newTags[extensionOptions.days.tag + taskDays] = false : 
+          newTags[taskDays + extensionOptions.days.tag] = false
+      }
+    }
+    taskIdx++;
+    isLast = taskIdx == numTasks ? true : false;
+    console.log(taskIdx);
+    console.log(isLast);
+    if( newTags != allTasks[task].tags ){
+      allTasks[task].tags = newTags;
+      allTasks[task].changed = true;
+      updateTaskOnServer( allTasks[task], isLast )
+    }
+  }
+}
+
 
 function distillToMinutes(taskID){
   var thisTask = allTasks[taskID];
@@ -76,20 +116,13 @@ function distillToMinutes(taskID){
   }
 }
 
-function calculateMinutes(task){
-  if( task.tasks > 0 ){
-    task.minutes = 0;
+function calculateChildMinutes(task){
+  if( task.tasks.length > 0 ){
     for( childTask in task.tasks ){
-      task.minutes += calculateMinutes(allTasks[task.tasks[childTask]]);
-      task.changed = true;
+      var currentChildTask = allTasks[task.tasks[childTask]];
+      calculateChildMinutes(currentChildTask);
+      task.minutes += currentChildTask.minutes;
     }
-  }
-  return task.minutes;
-}
-
-function logIfChanged(task){
-  if( task.changed ){
-    console.log(task);
   }
 }
 
@@ -103,182 +136,32 @@ var numChanged = function(){
   return n;
 };
 
-/*
-function doRecalculateTags() {
-  $.getJSON(rootAPIUrl + 'checklists/' + listID + '/tasks.json').complete( function(data){
-//    console.log(data.responseText);
-    var listData = JSON.parse(data.responseText);
-    console.log(listData);
-    for(var task in listData){
-      var thisID = listData[task].id;
-      allTasks[thisID] = listData[task];
-      allTasks[thisID]['minutes'] = 0;
-      allTasks[thisID]['hours'] = 0;
-      allTasks[thisID]['days'] = 0;
-      allTasks[thisID]['changed'] = false;
-    }
-    for( var t in allTasks ){
-      if( allTasks[t].parent_id == 0 ){
-        getChildTotal(allTasks[t].id);
+function updateTaskOnServer( task, isLast ){
+  if( task.changed == false ){
+    return false;
+  }
+  var updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + task.id + '.json';
+  var tagsCommaDelimited = Object.keys( task.tags ).join(',');
+  // work around fact that API will not set tags to empty string
+  if( tagsCommaDelimited == '' ){ 
+    tagsCommaDelimited = ',';
+  }
+  console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + task.content + ')');
+  $.ajax({
+    type: 'PUT', 
+    url: updateURL,
+    data: {
+      'task': { 
+        'tags':  tagsCommaDelimited
       }
     }
-    var currTask = 0;
-    for( var t in allTasks ){
-      var thisTask = allTasks[t]
-      scrubCurrentTags(thisTask.id);
-      thisTask.minutes = parseInt(thisTask.minutes);
-      if( thisTask.minutes > 0 && extensionOptions.minutes.generate ){
-        var thisTag = generateTag(thisTask.id, 'm');
-        thisTask.tags[thisTag] = false;
-        thisTask.changed = true;
-      }
-      if( thisTask.hours > 0 && extensionOptions.hours.generate ){
-        var thisTag = generateTag(thisTask.id, 'h');
-        thisTask.tags[thisTag] = false;
-        thisTask.changed = true;
-      }
-      if( thisTask.days > 0 && extensionOptions.days.generate ){
-        var thisTag = generateTag(thisTask.id, 'd');
-        thisTask.tags[thisTag] = false;
-        thisTask.changed = true;
-      }
-      if( thisTask.changed ){ 
-        currTask++;
-        var isLast = false;
-        if( currTask == numChanged() ){ isLast = true; }
-        updateTaskOnServer(thisTask.id, isLast);
-      }
-    }
+  }).complete( function(d){
+    // only reload page if we've updated the last changed tag
+    if( isLast ){ document.location.reload(); }
+    return true;
   });
 }
 
-
-
-function getChildTotal(taskID){
-	var thisTask = allTasks[taskID];
-	if( thisTask.tasks.length == 0 ){
-		// has no children, set its hours
-		var tags = Object.keys(thisTask.tags);
-		for( var tag in tags ){
-			var tagText = tags[tag].toString();
-			// capture regexp results
-      var matchesMins = tagPatternMins.exec(tagText);
-      if( matchesMins && matchesMins.length > 0 ){ 
-        thisTask.minutes = matchesMins[1];
-        thisTask.hours = Math.ceil(thisTask.minutes / 60);
-        thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
-      }
-			var matchesHrs = tagPatternHrs.exec(tagText);
-			if( matchesHrs && matchesHrs.length > 0 ){ 
-			  thisTask.hours = matchesHrs[1];
-			  thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
-        thisTask.mins = thisTask.hours * 60;
-		  }
-			var matchesDays = tagPatternDays.exec(tagText);
-			if( matchesDays && matchesDays.length > 0 ){ 
-			  thisTask.days = matchesDays[1];
-			  thisTask.hours = thisTask.days * extensionOptions.days.hoursPer;
-        thisTask.mins = thisTask.hours * 60;
-		  }
-		}
-	}else{
-		for( var child in thisTask.tasks){
-			getChildTotal(thisTask.tasks[child]);
-			if( extensionOptions.includeClosed || 
-			    ( extensionOptions.includeClosed == false && 
-			      allTasks[thisTask.tasks[child]].status == 0 ) 
-			){
-        thisTask.mins += parseInt(allTasks[thisTask.tasks[child]].mins);
-        thisTask.hours += parseInt(allTasks[thisTask.tasks[child]].hours);
-		  }
-			thisTask.days = Math.ceil(thisTask.hours / extensionOptions.days.hoursPer);
-		}
-	}
-}
-
-function generateTag(id, type){
-  var thisTask = allTasks[id];
-	
-  switch (type){
-    case 'm':
-      return extensionOptions.minutes.prefix ? 
-              extensionOptions.minutes.tag + thisTask.minutes : 
-              thisTask.minutes + extensionOptions.minutes.tag;
-      break;
-    case 'h':
-      return extensionOptions.hours.prefix ? 
-              extensionOptions.hours.tag + thisTask.hours : 
-              thisTask.hours + extensionOptions.hours.tag;
-      break;
-    case 'd':
-      return extensionOptions.days.prefix ? 
-              extensionOptions.days.tag + thisTask.days : 
-              thisTask.days + extensionOptions.days.tag;
-      break;
-  }
-}
-
-function scrubCurrentTags(id){
-	taskTags = Object.keys( allTasks[id].tags );
-	
-	var numDeletions = 0;
-	for( var t in taskTags ){
-    var minsTag = generateTag(id, 'm');
-    var hoursTag = generateTag(id, 'h');
-	  var daysTag = generateTag(id, 'd');
-    if( tagPatternMins.test( taskTags[t] ) ){
-      // don't bother to delete if the tag already matches the minutes
-      if( !extensionOptions.minutes.generate || minsTag != taskTags[t] ){
-        delete allTasks[id].tags[taskTags[t]];
-        allTasks[id].changed = true;
-        numDeletions++;
-      }
-    }
-		if( tagPatternHrs.test( taskTags[t] ) ){
-			// don't bother to delete if the tag already matches the hours
-			if( !extensionOptions.hours.generate || hoursTag != taskTags[t] ){
-				delete allTasks[id].tags[taskTags[t]];
-				allTasks[id].changed = true;
-				numDeletions++;
-			}
-		}
-		if( tagPatternDays.test( taskTags[t] ) ){
-			// don't bother to delete if the tag already matches the days
-			if( !extensionOptions.days.generate || daysTag != taskTags[t] ){
-				delete allTasks[id].tags[taskTags[t]];
-				allTasks[id].changed = true;
-				numDeletions++;
-			}
-		}
-	}
-  return numDeletions > 0;
-}
-
-function updateTaskOnServer( taskID, isLast ){
-  if( allTasks[taskID].changed == false ){
-    return false;
-  }
-	var updateURL = rootAPIUrl + 'checklists/' + listID + '/tasks/' + taskID + '.json';
-	var tagsCommaDelimited = Object.keys( allTasks[taskID].tags ).join(',');
-	// work around fact that API will not set tags to empty string
-	if( tagsCommaDelimited == '' ){ 
-	  tagsCommaDelimited = ',';
-	}
-	console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + allTasks[taskID].content + ')');
-	$.ajax({
-		type: 'PUT', 
-		url: updateURL,
-		data: {
-			'task': { 
-				'tags':  tagsCommaDelimited
-			}
-		}
-	}).complete( function(d){
-	  // only reload page if we've updated the last changed tag
-    if( isLast ){ document.location.reload(); }
-	  return true;
-	});
-}
 
 function initTimeTagsClasses() {
 
@@ -307,5 +190,3 @@ function initTimeTagsClasses() {
 }
 
 initTimeTagsClasses();
-
-*/
