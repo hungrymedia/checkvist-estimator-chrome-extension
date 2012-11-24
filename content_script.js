@@ -86,8 +86,6 @@ function tagAll(){
     }
     taskIdx++;
     isLast = taskIdx == numTasks ? true : false;
-    console.log(taskIdx);
-    console.log(isLast);
     if( newTags != allTasks[task].tags ){
       allTasks[task].tags = newTags;
       allTasks[task].changed = true;
@@ -118,11 +116,13 @@ function distillToMinutes(taskID){
 
 function calculateChildMinutes(task){
   if( task.tasks.length > 0 ){
+    var ttlChildMinutes = 0;
     for( childTask in task.tasks ){
       var currentChildTask = allTasks[task.tasks[childTask]];
       calculateChildMinutes(currentChildTask);
-      task.minutes += currentChildTask.minutes;
+      ttlChildMinutes += currentChildTask.minutes;
     }
+    task.minutes = ttlChildMinutes;
   }
 }
 
@@ -146,7 +146,6 @@ function updateTaskOnServer( task, isLast ){
   if( tagsCommaDelimited == '' ){ 
     tagsCommaDelimited = ',';
   }
-  console.log('Setting tags: ' + tagsCommaDelimited + ' (for task: ' + task.content + ')');
   $.ajax({
     type: 'PUT', 
     url: updateURL,
