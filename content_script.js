@@ -115,14 +115,27 @@ function distillToMinutes(taskID){
 }
 
 function calculateChildMinutes(task){
-  if( task.tasks.length > 0 ){
-    var ttlChildMinutes = 0;
-    for( childTask in task.tasks ){
-      var currentChildTask = allTasks[task.tasks[childTask]];
-      calculateChildMinutes(currentChildTask);
-      ttlChildMinutes += currentChildTask.minutes;
+  // check for includeClosed
+  if( countTask(task) ){
+    if( task.tasks.length > 0 ){
+      var ttlChildMinutes = 0;
+      for( childTask in task.tasks ){
+        var currentChildTask = allTasks[task.tasks[childTask]];
+        if( countTask(currentChildTask) ){
+          calculateChildMinutes(currentChildTask);
+          ttlChildMinutes += currentChildTask.minutes;
+        }
+      }
+      task.minutes = ttlChildMinutes;
     }
-    task.minutes = ttlChildMinutes;
+  }
+}
+
+function countTask(task){
+  if( extensionOptions.includeClosed == false && task.status == 1 ){
+    return false;
+  }else{
+    return true;
   }
 }
 
